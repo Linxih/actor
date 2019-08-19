@@ -495,10 +495,10 @@ void Actor::LoadAnimation(sdf::ElementPtr _sdf)
     return;
   }
 
-   if (this->bvhFile)
+  /* if (this->bvhFile)
   {
     this->AlignBvh(skel, skelMap);
-  }
+  } */
 
   this->skelAnimation[animName] = skel->GetAnimation(0);
   this->interpolateX[animName] = _sdf->Get<bool>("interpolate_x");
@@ -703,7 +703,24 @@ void Actor::Update()
     rootM.SetTranslation(actorPose.Pos());
 
   frame[skelMap[this->skeleton->GetRootNode()->GetName()]] = rootM;
+////////////////////////////////////////////////////////////////////////////////
+  for (unsigned int i = 0; i < this->skeleton->GetNumNodes(); ++i)
+  {
+    SkeletonNode *skinNode = this->skeleton->GetNodeByHandle(i); //skeleton of skin
 
+
+    ignition::math::Vector3d daeOffset = skinNode->Transform().Translation();
+        
+    ignition::math::Vector3d bvhOffset = frame[skelMap[skinNode->GetName()]].Translation();
+         
+    //aling initial pose of skin to bvh
+
+    ignition::math::Matrix4d temp(ignition::math::Matrix4d::Identity); 
+    temp.SetTranslation(daeOffset.Length() * bvhOffset.Normalize()); 
+    
+    skinNode->SetTransform(temp,true);
+  }
+////////////////////////////////////////////////////////////////////////////////
   this->SetPose(frame, skelMap, currentTime.Double());
 }
 
